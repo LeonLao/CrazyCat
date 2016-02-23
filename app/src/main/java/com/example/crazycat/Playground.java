@@ -3,14 +3,20 @@ package com.example.crazycat;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.RectF;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.View;
+import android.widget.Toast;
 
 /**
  * Created by jack on 2016/2/18.
  */
-public class Playground extends SurfaceView {
+public class Playground extends SurfaceView implements View.OnTouchListener{
 
+    private static int WIDTH = 40;
     private static final int COL = 10;
     private static final int ROW = 10;
     private static final int RBLOCKS = 10;//默认的路障数量
@@ -31,6 +37,7 @@ public class Playground extends SurfaceView {
                 matrix[i][j]  = new Dot(j,i);
             }
         }
+        setOnTouchListener(this);
         initGame();
     }
     //坐标转换
@@ -41,7 +48,32 @@ public class Playground extends SurfaceView {
 
     private void redraw(){
         Canvas canvas = getHolder().lockCanvas();
-        canvas.drawColor(Color.CYAN);
+            canvas.drawColor(Color.LTGRAY);
+        Paint paint = new Paint();
+        paint.setFlags(Paint.ANTI_ALIAS_FLAG);
+        for (int i = 0;i<ROW;i++){
+            //错位排列每行元素
+            int offset = 0;
+            if (i%2!=0){
+                offset = WIDTH/2;
+            }
+            for (int j = 0 ;j<COL;j++){
+                Dot one  = getDot(j,i);
+                switch (one.getStatus()){
+                    case Dot.STATUS_OFF:
+                        paint.setColor(0xFFEEEEEE);
+                        break;
+                    case Dot.STATUS_ON:
+                        paint.setColor(0xFFFFAA00);
+                        break;
+                    case Dot.STATUS_IN:
+                        paint.setColor(0xFFFF0000);
+                        break;
+                }
+                canvas.drawOval(new RectF(one.getX()*WIDTH+offset,one.getY()*WIDTH,
+                        (one.getX()+1)*WIDTH+offset,(one.getY()+1)*WIDTH),paint);//画一个椭圆
+            }
+        }
         getHolder().unlockCanvasAndPost(canvas);
 
     }
@@ -53,7 +85,8 @@ public class Playground extends SurfaceView {
 
         @Override
         public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-
+            WIDTH = width/(COL+1);
+            redraw();
         }
 
         @Override
@@ -83,4 +116,25 @@ public class Playground extends SurfaceView {
         }
     }
 
+    @Override
+    public boolean onTouch(View v, MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_UP){
+           // Toast.makeText(getContext(),event.getX()+":"+event.getY(),Toast.LENGTH_SHORT).show();
+            int x,y;
+            y = (int)(event.getY()/WIDTH);
+            if (y%2==0){
+                x=(int)(event.getX()/WIDTH);
+            }else {
+                x=(int)(event.getX()-WIDTH/2)/WIDTH;
+            }
+            if (x+1>COL||y+1>ROW){
+                initGame();
+            }else {
+                getDot(x,y).setStatus(Dot.STATUS_ON);
+            }
+            redraw();
+        }
+
+        return true;
+    }
 }
