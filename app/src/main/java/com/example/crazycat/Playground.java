@@ -45,6 +45,55 @@ public class Playground extends SurfaceView implements View.OnTouchListener{
         return matrix[y][x];
     }
 
+    //判断点是否到了游戏的边界
+    private boolean isAtEdge(Dot dot){
+        if (dot.getX()*dot.getY() == 0||dot.getX()+1==COL||dot.getY()+1==ROW){
+            return true;
+        }
+        return false;
+    }
+
+    //获取相邻点
+    private Dot getNrighbour(Dot dot,int dir){
+        switch (dir){
+            case 1:
+                getDot(dot.getX()-1,dot.getY());
+                break;
+            case 2:
+                if (dot.getY()%2==0){
+                    getDot(dot.getX(),dot.getY()-1);
+                }else {
+                    getDot(dot.getX()-1,dot.getY()-1);
+                }
+                break;
+            case 3:
+                if (dot.getY()%2==0){
+                    getDot(dot.getX()+1,dot.getY()-1);
+                }else {
+                    getDot(dot.getX()-1,dot.getY());
+                }
+                break;
+            case 4:
+                getDot(dot.getX()+1,dot.getY());
+                break;
+            case 5:
+                if (dot.getY()%2==0){
+                    getDot(dot.getX(),dot.getY());
+                }else {
+                    getDot(dot.getX(),dot.getY());
+                }
+                break;
+            case 6:
+                if (dot.getY()%2==0){
+                    getDot(dot.getX(),dot.getY()+1);
+                }else {
+                    getDot(dot.getX(),dot.getY());
+                }
+                break;
+        }
+    }
+
+
 
     private void redraw(){
         Canvas canvas = getHolder().lockCanvas();
