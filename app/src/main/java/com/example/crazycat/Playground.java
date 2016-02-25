@@ -12,6 +12,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import java.security.KeyPairGeneratorSpi;
+import java.util.HashMap;
 import java.util.Vector;
 
 /**
@@ -20,8 +21,6 @@ import java.util.Vector;
 public class Playground extends SurfaceView implements View.OnTouchListener{
 
     int k = 1;
-    //是否第一次设置路障
-    boolean justinit;
 
     private static int WIDTH = 40;
     private static final int COL = 10;
@@ -30,6 +29,7 @@ public class Playground extends SurfaceView implements View.OnTouchListener{
 
     private Dot matrix[][];
     // 猫
+
     private Dot cat;
 
 
@@ -107,6 +107,10 @@ public class Playground extends SurfaceView implements View.OnTouchListener{
     //正数代表该方向上没路障，负值代表有路障，数字代表距离
     private int getDistance(Dot dot,int dir){
         int distance = 0;
+        //如果当前点已经到屏幕边缘就不用判断了
+        if (isAtEdge(dot)){
+            return 1;
+        }
         //是否一直走到场景边缘
         Dot ori = dot,next;
         while (true){
@@ -239,26 +243,64 @@ public class Playground extends SurfaceView implements View.OnTouchListener{
 
         //记录器,泛型指定为Dot
         Vector<Dot> avaliable = new Vector<>();
+        //记录是否有可以直接到达边缘的
+        Vector<Dot> positive = new Vector<>();
+        //需要一个容器记录方向
+        HashMap<Dot,Integer> pl = new HashMap<Dot,Integer>();
         for (int i=1;i<7;i++){
             Dot n = getNrighbour(cat,i);
             if (n.getStatus()==Dot.STATUS_OFF){
                 //如果当前点可用，则添加进去
                 avaliable.add(n);
+                pl.put(n,i);
+                if (getDistance(n,i)>0){
+                    positive.add(n);
+                }
             }
         }
         if (avaliable.size()==0){
             win();
         }else if (avaliable.size()==1){
             MoveTo(avaliable.get(0));
-        }else {
-            int d = (int)(Math.random()*1000)%avaliable.size();
-            MoveTo(avaliable.get(d));
         }
+//        else if (justinit){
+//            //第一次移动
+//            int d = (int)(Math.random()*1000)%avaliable.size();
+//            MoveTo(avaliable.get(d));
+//        }
+        else {
+            //最优路径点
+            Dot best= null;
+            if (positive.size() !=0){
+                //存在可以直接到达边缘的走向
+                int min=999;
+                for (int i= 0;i<positive.size();i++){
+                    int a = getDistance(positive.get(i),pl.get(positive.get(i)));
+                    if (a<min){
+                        min = a;
+                        best = positive.get(i);
+                    }
+                }
+            }
+            else {
+                //所有方向都存在路障
+                int max=0;
+                for (int i=0;i<avaliable.size();i++){
+                    int k = getDistance(avaliable.get(i),pl.get(avaliable.get(i)));
+                    if (k<max){
+                        max = k;
+                        best = avaliable.get(i);
+                    }
+                }
+            }
+            MoveTo(best);
+        }
+
     }
 
     private void gameOver() {
-        Toast.makeText(getContext(),"fffff",Toast.LENGTH_SHORT).show();
+        Toast.makeText(getContext(),"CrazyCat跑了",Toast.LENGTH_SHORT).show();
     }private void win() {
-        Toast.makeText(getContext(),"vvvvvv",Toast.LENGTH_SHORT).show();
+        Toast.makeText(getContext(),"成功围住了神经猫",Toast.LENGTH_SHORT).show();
     }
 }
